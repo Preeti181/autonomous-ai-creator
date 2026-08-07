@@ -1,0 +1,34 @@
+# ---------- Python ----------
+backend/venv/
+backend/__pycache__/
+backend/**/*.pyc
+backend/.env
+
+# SQLite
+backend/*.db
+backend/database/*.db
+
+# Logs
+backend/logs/*.log
+
+# ---------- Flutter ----------
+frontend/.dart_tool/
+frontend/build/
+frontend/.packages
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+
+# Android
+frontend/android/.gradle/
+frontend/android/app/debug/
+frontend/android/app/profile/
+frontend/android/app/release/
+
+# VS Code
+.vscode/
+
+# JetBrains
+.idea/
+
+# macOS
+.DS_Store
