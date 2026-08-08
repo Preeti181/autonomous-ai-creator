@@ -32,3 +32,6 @@ frontend/android/app/release/
 
 # macOS
 .DS_Store
+
+# SQLite / Flask instance
+backend/instance/
