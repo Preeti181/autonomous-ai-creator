@@ -186,3 +186,86 @@ def create_topic():
             "success": False,
             "error": f"{type(e).__name__}: {str(e)}"
         }), 500
+ 
+@agent_bp.route("/api/agent/generate", methods=["POST"])
+def generate_post():
+    try:
+        data = request.get_json(silent=True) or {}
+
+        topic_id = data.get("topic_id")
+
+        if topic_id:
+            topic = Topic.query.get(int(topic_id))
+        else:
+            topic = (
+                Topic.query
+                .order_by(Topic.id.desc())
+                .first()
+            )
+
+        if not topic:
+            return jsonify({
+                "success": False,
+                "error": "No topic available"
+            }), 404
+
+        title = topic.title
+
+        content = (
+            f"{title} is becoming an important area in modern "
+            f"artificial intelligence. Autonomous AI systems can "
+            f"identify relevant topics, analyze information, and "
+            f"turn those insights into useful content with minimal "
+            f"human intervention. "
+            f"\n\n"
+            f"The key advantage is the ability to continuously "
+            f"discover topics, evaluate their relevance, and "
+            f"produce structured content automatically. This can "
+            f"help creators and organizations stay informed while "
+            f"reducing repetitive manual work."
+        )
+
+        rationale = (
+            "Post generated autonomously from the selected topic. "
+            "The agent converted the topic into structured "
+            "AI-focused content."
+        )
+
+        post = Post(
+            topic_id=topic.id,
+            content=content,
+            rationale=rationale,
+            sources=json.dumps([topic.url]),
+            status="published"
+        )
+
+        db.session.add(post)
+        db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "message": "Post generated successfully",
+            "post": {
+                "id": post.id,
+                "topic_id": topic.id,
+                "title": topic.title,
+                "content": post.content,
+                "rationale": post.rationale,
+                "sources": [topic.url],
+                "status": post.status,
+                "created_at": (
+                    post.created_at.isoformat()
+                    if post.created_at else None
+                )
+            }
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+
+        print(f"[GENERATE ERROR] {type(e).__name__}: {e}")
+
+        return jsonify({
+            "success": False,
+            "error": f"{type(e).__name__}: {str(e)}"
+        }), 500
