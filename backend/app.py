@@ -1,4 +1,4 @@
-from flask import Flask, send_from_directory
+﻿from flask import Flask, send_from_directory
 
 from config import Config
 from database.db import db
@@ -62,3 +62,14 @@ if __name__ == "__main__":
         debug=True,
         use_reloader=False
     )
+# ============================================================
+# DATABASE INITIALIZATION
+# ============================================================
+
+try:
+    with app.app_context():
+        from database.db import db
+        db.create_all()
+        print("✅ Database tables initialized successfully")
+except Exception as e:
+    print(f"⚠️ Database initialization warning: {e}")
