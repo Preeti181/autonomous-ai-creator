@@ -169,70 +169,6 @@ def create_topic():
                 "url": topic.url,
                 "score": topic.score,
                 "status": topic.status,
-                "reason": topic.reason
-            }
-        }), 201
-
-    except Exception as e:
-        db.session.rollback()
-
-        print(f"[TOPIC ERROR] {type(e).__name__}: {e}")
-
-        return jsonify({
-            "success": False,
-            "error": f"{type(e).__name__}: {str(e)}"
-        }), 500
-@agent_bp.route("/api/agent/topic", methods=["POST"])
-def create_topic():
-    try:
-        data = request.get_json(silent=True)
-
-        if not isinstance(data, dict):
-            return jsonify({
-                "success": False,
-                "error": "Request body must be valid JSON"
-            }), 400
-
-        title = str(data.get("title") or "").strip()
-        source = str(data.get("source") or "Autonomous AI Creator").strip()
-        url = str(data.get("url") or "").strip()
-        score = float(data.get("score") or 0.0)
-        reason = str(data.get("reason") or "").strip()
-
-        if not title:
-            return jsonify({
-                "success": False,
-                "error": "title is required"
-            }), 400
-
-        if not url:
-            return jsonify({
-                "success": False,
-                "error": "url is required"
-            }), 400
-
-        topic = Topic(
-            title=title,
-            source=source,
-            url=url,
-            score=score,
-            status="discovered",
-            reason=reason
-        )
-
-        db.session.add(topic)
-        db.session.commit()
-
-        return jsonify({
-            "success": True,
-            "message": "Topic created successfully",
-            "topic": {
-                "id": topic.id,
-                "title": topic.title,
-                "source": topic.source,
-                "url": topic.url,
-                "score": topic.score,
-                "status": topic.status,
                 "reason": topic.reason,
                 "created_at": (
                     topic.created_at.isoformat()
@@ -243,6 +179,8 @@ def create_topic():
 
     except Exception as e:
         db.session.rollback()
+
+        print(f"[TOPIC ERROR] {type(e).__name__}: {e}")
 
         return jsonify({
             "success": False,
