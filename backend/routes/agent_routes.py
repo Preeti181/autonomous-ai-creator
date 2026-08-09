@@ -1,5 +1,8 @@
 from flask import Blueprint, jsonify, request
+from datetime import datetime
+import json
 
+from database.db import db
 from models.post import Post
 from models.topic import Topic
 
@@ -26,10 +29,8 @@ def agent_feed():
 
             sources = post.sources
 
-            # Convert JSON string → Python list
             if isinstance(sources, str):
                 try:
-                    import json
                     sources = json.loads(sources)
                 except Exception:
                     sources = [sources]
@@ -62,18 +63,50 @@ def agent_feed():
 
 @agent_bp.route("/api/agent/init", methods=["POST"])
 def init_agent():
-    data = request.get_json(silent=True) or {}
+    try:
+        data = request.get_json(silent=True) or {}
+        persona = data.get("persona")
 
-    persona = data.get("persona")
+        if not persona:
+            return jsonify({
+                "success": False,
+                "error": "persona is required"
+            }), 400
 
-    if not persona:
+        # Create a topic
+        topic = Topic(
+            title=f"{persona.get('name', 'AI')} - {persona.get('domain', 'AI')}"
+        )
+        db.session.add(topic)
+        db.session.flush()
+
+        # Create the first AI-generated post
+        post = Post(
+            topic_id=topic.id,
+            content=(
+                f"Hello! I am {persona.get('name', 'AI Agent')}, "
+                f"an autonomous AI creator focused on "
+                f"{persona.get('domain', 'Artificial Intelligence')}."
+            ),
+            rationale="Initial post generated when the AI agent was initialized.",
+            sources=[],
+            created_at=datetime.utcnow()
+        )
+
+        db.session.add(post)
+        db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "message": "Agent initialized successfully",
+            "persona": persona,
+            "post_id": post.id
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+
         return jsonify({
             "success": False,
-            "error": "persona is required"
-        }), 400
-
-    return jsonify({
-        "success": True,
-        "message": "Agent initialized successfully",
-        "persona": persona
-    }), 200
+            "error": str(e)
+        }), 500
