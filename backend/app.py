@@ -1,24 +1,51 @@
-from flask import Flask
+﻿from flask import Flask, send_from_directory
 
 from config import Config
 from database.db import db
 from routes.health_routes import health_bp
 from routes.agent_routes import agent_bp
+from scheduler.autonomous_scheduler import start_scheduler
+
+from pathlib import Path
 
 
 def create_app():
-    """Create and configure the Flask application."""
+    """Create and configure Flask application."""
+
     app = Flask(__name__)
 
+    # CORS
+    @app.after_request
+    def add_cors_headers(response):
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        return response
+
+    # Configuration
     app.config.from_object(Config)
 
+    # Database
     db.init_app(app)
 
+    # Routes
     app.register_blueprint(health_bp)
     app.register_blueprint(agent_bp)
 
+    # Create database tables
     with app.app_context():
         db.create_all()
+
+    # Serve frontend
+    frontend_dir = Path(__file__).resolve().parent.parent / "frontend" / "web"
+
+    @app.route("/")
+    def home():
+        return send_from_directory(str(frontend_dir), "index.html")
+
+    @app.route("/dashboard")
+    def dashboard():
+        return send_from_directory(str(frontend_dir), "index.html")
 
     return app
 
@@ -27,4 +54,11 @@ app = create_app()
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    start_scheduler(app)
+
+    app.run(
+        host="127.0.0.1",
+        port=5000,
+        debug=True,
+        use_reloader=False
+    )

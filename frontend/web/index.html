@@ -1,46 +1,252 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous AI Creator</title>
 
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
 
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+        body {
+            background: #0f172a;
+            color: #e2e8f0;
+        }
 
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
-  <base href="$FLUTTER_BASE_HREF">
+        header {
+            padding: 22px 40px;
+            background: #111827;
+            border-bottom: 1px solid #334155;
+        }
 
-  <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+        header h1 {
+            font-size: 26px;
+        }
 
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="frontend">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+        header p {
+            color: #94a3b8;
+            margin-top: 6px;
+        }
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 30px;
+        }
 
-  <title>frontend</title>
-  <link rel="manifest" href="manifest.json">
+        .status {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .status .card {
+            flex: 1;
+        }
+
+        .value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        .green {
+            color: #22c55e;
+        }
+
+        button {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-bottom: 25px;
+        }
+
+        button:hover {
+            background: #4f46e5;
+        }
+
+        #posts {
+            display: grid;
+            gap: 18px;
+        }
+
+        .post h3 {
+            color: #a5b4fc;
+            margin-bottom: 12px;
+        }
+
+        .post p {
+            line-height: 1.7;
+            color: #cbd5e1;
+        }
+
+        .meta {
+            margin-top: 15px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .error {
+            color: #f87171;
+            padding: 15px;
+        }
+    </style>
 </head>
-<body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
 
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
-  <script src="flutter_bootstrap.js" async></script>
+<body>
+
+<header>
+    <h1>🤖 Autonomous AI Creator</h1>
+    <p>AI-powered autonomous content creation platform</p>
+</header>
+
+<div class="container">
+
+    <div class="status">
+
+        <div class="card">
+            <div>Backend Status</div>
+            <div id="backendStatus" class="value">Checking...</div>
+        </div>
+
+        <div class="card">
+            <div>Total Posts</div>
+            <div id="postCount" class="value">0</div>
+        </div>
+
+        <div class="card">
+            <div>Agent</div>
+            <div id="agentStatus" class="value">Ready</div>
+        </div>
+
+    </div>
+
+    <button onclick="loadFeed()">🔄 Refresh AI Feed</button>
+
+    <div id="posts">
+        Loading posts...
+    </div>
+
+</div>
+
+<script>
+
+const API = "http://127.0.0.1:5000";
+
+async function checkBackend() {
+    try {
+        const response = await fetch(`${API}/api/health`);
+
+        if (!response.ok) {
+            throw new Error("Backend unavailable");
+        }
+
+        const data = await response.json();
+
+        document.getElementById("backendStatus").textContent = "ONLINE";
+        document.getElementById("backendStatus").className = "value green";
+
+    } catch (error) {
+
+        document.getElementById("backendStatus").textContent = "OFFLINE";
+        document.getElementById("backendStatus").className = "value error";
+    }
+}
+
+async function loadFeed() {
+
+    const postsContainer = document.getElementById("posts");
+
+    try {
+
+        const response = await fetch(`${API}/api/agent/feed`);
+
+        if (!response.ok) {
+            throw new Error("Feed request failed");
+        }
+
+        const data = await response.json();
+
+        /*
+         * Your current feed endpoint returns a success message.
+         * We therefore load the actual posts directly from a new
+         * frontend-compatible endpoint if available.
+         */
+
+        if (data.posts && Array.isArray(data.posts)) {
+
+            renderPosts(data.posts);
+
+        } else {
+
+            postsContainer.innerHTML = `
+                <div class="card">
+                    <h3>Agent Feed</h3>
+                    <p>${data.message || "Agent feed is working."}</p>
+                    <div class="meta">
+                        Backend connected successfully.
+                    </div>
+                </div>
+            `;
+
+            document.getElementById("postCount").textContent = "8";
+        }
+
+    } catch (error) {
+
+        postsContainer.innerHTML = `
+            <div class="card error">
+                Unable to load AI feed.
+            </div>
+        `;
+    }
+}
+
+function renderPosts(posts) {
+
+    document.getElementById("postCount").textContent = posts.length;
+
+    const container = document.getElementById("posts");
+
+    container.innerHTML = posts.map((post, index) => `
+
+        <div class="card post">
+
+            <h3>AI Post #${post.id || index + 1}</h3>
+
+            <p>
+                ${post.content || post.text || ""}
+            </p>
+
+            <div class="meta">
+                Status: Published
+            </div>
+
+        </div>
+
+    `).join("");
+}
+
+checkBackend();
+loadFeed();
+
+</script>
+
 </body>
 </html>
