@@ -1,10 +1,11 @@
 from flask import Blueprint, jsonify, request
-from datetime import datetime
 import json
+import uuid
 
 from database.db import db
 from models.post import Post
 from models.topic import Topic
+
 
 agent_bp = Blueprint("agent", __name__)
 
@@ -73,24 +74,32 @@ def init_agent():
                 "error": "persona is required"
             }), 400
 
-        # Create a topic
+        name = persona.get("name", "AI Agent")
+        domain = persona.get("domain", "Artificial Intelligence")
+
+        # Create a topic.
+        # Topic requires title, source and unique URL.
         topic = Topic(
-            title=f"{persona.get('name', 'AI')} - {persona.get('domain', 'AI')}"
+            title=f"{name} - {domain}",
+            source="Autonomous AI Creator",
+            url=f"https://autonomous-ai-creator.local/topic/{uuid.uuid4()}",
+            reason="Topic created during autonomous agent initialization."
         )
+
         db.session.add(topic)
         db.session.flush()
 
-        # Create the first AI-generated post
+        # Create the first AI-generated post.
+        # Post.sources is a TEXT column, so store JSON text.
         post = Post(
             topic_id=topic.id,
             content=(
-                f"Hello! I am {persona.get('name', 'AI Agent')}, "
-                f"an autonomous AI creator focused on "
-                f"{persona.get('domain', 'Artificial Intelligence')}."
+                f"Hello! I am {name}, an autonomous AI creator "
+                f"focused on {domain}. "
+                f"This is my first AI-generated post."
             ),
             rationale="Initial post generated when the AI agent was initialized.",
-            sources=[],
-            created_at=datetime.utcnow()
+            sources=json.dumps([])
         )
 
         db.session.add(post)
