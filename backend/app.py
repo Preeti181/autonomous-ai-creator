@@ -1,4 +1,4 @@
-﻿from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory
 
 from config import Config
 from database.db import db
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     start_scheduler(app)
 
     app.run(
-        host="127.0.0.1",
+        host="0.0.0.0",
         port=5000,
         debug=True,
         use_reloader=False
